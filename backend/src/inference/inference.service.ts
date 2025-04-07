@@ -34,16 +34,65 @@ export class InferenceService {
 
   async inferLocalImage(imagePath: string, testImageName?: string): Promise<any> {
     try {
-      this.logger.log(`Inferring local image: ${imagePath || testImageName}`);
+      const imageToProcess = testImageName 
+        ? path.join(this.testImagesDir, testImageName)
+        : imagePath;
       
-      // Mock implementation - in a real app, this would call a computer vision API
-      // For now, return random number of available spaces between 0 and 20
+      console.log('\n🖼️ Image Processing Details:');
+      console.log(`Image path: ${imageToProcess}`);
+      
+      // Log image reading process
+      if (fs.existsSync(imageToProcess)) {
+        const imageBuffer = fs.readFileSync(imageToProcess);
+        console.log('📸 Image successfully read');
+        console.log('📦 Image size:', imageBuffer.length, 'bytes');
+        console.log('🔄 Image format:', path.extname(imageToProcess));
+        
+        // Check if image is being converted to base64
+        const base64Image = imageBuffer.toString('base64');
+        console.log('✅ Image converted to base64');
+        console.log('📊 Base64 length:', base64Image.length);
+      } else {
+        console.log('❌ Image file not found');
+      }
+      
+      // Mock implementation for now
       const mockInferenceResult = {
         spaces: {
           total: 20,
-          available: Math.floor(Math.random() * 21) // Random number between 0 and 20
+          available: Math.floor(Math.random() * 21)
         }
       };
+  
+      // Log database update attempt
+      console.log('\n💾 Attempting database update with inference results:');
+      console.log(JSON.stringify(mockInferenceResult, null, 2));
+  
+      // Extract parking lot ID from filename
+      const parkingLotId = testImageName 
+        ? testImageName.split('-')[1].split('.')[0] 
+        : imagePath.split('-')[1].split('.')[0];
+  
+      // Update the database
+      const updatedLot = await this.parkingLotModel.findOneAndUpdate(
+        { ParkingID: parkingLotId },
+        { 
+          $set: { 
+            Available: mockInferenceResult.spaces.available,
+            lastUpdated: new Date()
+          } 
+        },
+        { new: true }
+      );
+  
+      console.log('\n📝 Database Update Result:');
+      console.log(JSON.stringify({
+        parkingLotId,
+        previousAvailable: updatedLot?.Available,
+        newAvailable: mockInferenceResult.spaces.available,
+        updateTime: new Date().toISOString(),
+        success: !!updatedLot
+      }, null, 2));
       
       return mockInferenceResult;
     } catch (error) {
@@ -51,4 +100,4 @@ export class InferenceService {
       throw error;
     }
   }
-} 
+}

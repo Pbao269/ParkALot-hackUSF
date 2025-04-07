@@ -4,12 +4,14 @@ import { Document } from 'mongoose';
 
 export type ParkingLotDocument = ParkingLot & Document;
 
-@Schema()
+@Schema({ collection: 'parkingLots' }) 
 export class ParkingLot {
   @Prop({ required: true })
   ParkingID: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false, default: function(this: any) {
+    return this.Location || `Parking Lot ${this.ParkingID}`;
+  }})
   name: string;
 
   @Prop({ required: true })

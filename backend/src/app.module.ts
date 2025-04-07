@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DistanceModule } from './distance/distance.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';  // Added ConfigService import
 import { HttpModule } from "@nestjs/axios";
 import { DatabaseModule } from './database/database.module';
 import { DatabaseService } from './database/database.service';
@@ -16,13 +16,22 @@ import { InferenceController } from './inference/inference.controller';
 
 @Module({
   imports: [
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        uri: configService.get<string>('MONGODB_URI'),
+        dbName: 'ParkingDB',  // Explicitly set the database name
+      }),
+      inject: [ConfigService],
+    }),
     HttpModule, 
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: process.env.NODE_ENV === 'production' ? '.env.production' : '.env' 
     }),
     ScheduleModule.forRoot(),
-    MongooseModule.forRoot(process.env.MONGO_URI || 'mongodb://localhost/parking'),
+    // Change MONGO_URI to MONGODB_URI to match your .env file
+    MongooseModule.forRoot(process.env.MONGODB_URI || 'mongodb://localhost/parking'),
     MongooseModule.forFeature([
       { name: ParkingLot.name, schema: ParkingLotSchema },
     ]),

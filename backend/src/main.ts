@@ -15,7 +15,7 @@ async function bootstrap() {
     
     console.log('Starting server on port:', process.env.PORT ?? 3000);
     console.log('Environment:', process.env.NODE_ENV);
-    console.log('MongoDB URI is set:', !!process.env.MONGO_URI);
+    console.log('MongoDB URI is set:', !!process.env.MONGODB_URI); // Changed from MONGO_URI to MONGODB_URI
     console.log('Google Maps API Key is set:', !!process.env.GOOGLE_MAPS_API_KEY);
     
     await app.listen(process.env.PORT ?? 3000);
