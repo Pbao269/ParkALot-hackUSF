@@ -22,9 +22,20 @@ export class ParkingUpdateService {
     @InjectModel(ParkingLot.name)
     private readonly parkingLotModel: Model<ParkingLotDocument>,
   ) {
-    if (this.useTestImages && !fs.existsSync(this.testImagesDir)) {
-      fs.mkdirSync(this.testImagesDir, { recursive: true });
-      console.log(`📁 Created test images directory at ${this.testImagesDir}`);
+    // Don't try to create the directory in production/Vercel environment
+    // Just log that we're using test images
+    if (this.useTestImages) {
+      try {
+        console.log(`🔍 Using test images from: ${this.testImagesDir}`);
+        // Check if directory exists but don't try to create it
+        if (fs.existsSync(this.testImagesDir)) {
+          console.log(`📁 Test images directory exists at ${this.testImagesDir}`);
+        } else {
+          console.log(`⚠️ Test images directory does not exist at ${this.testImagesDir}`);
+        }
+      } catch (error) {
+        console.warn(`⚠️ Could not access test images directory: ${error.message}`);
+      }
     }
   }
 
