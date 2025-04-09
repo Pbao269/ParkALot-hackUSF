@@ -27,7 +27,8 @@ import { InferenceController } from './inference/inference.controller';
     HttpModule, 
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: process.env.NODE_ENV === 'production' ? '.env.production' : '.env' 
+      // Simplified config that works with Vercel
+      envFilePath: '.env'
     }),
     ScheduleModule.forRoot(),
     // Change MONGO_URI to MONGODB_URI to match your .env file

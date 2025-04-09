@@ -5,16 +5,17 @@ async function bootstrap() {
   try {
     const app = await NestFactory.create(AppModule);
     
-    // Enable CORS for all domains
+    // Enable CORS with more specific configuration for production
     app.enableCors({
-      origin: '*',
+      origin: process.env.ALLOWED_ORIGINS 
+        ? process.env.ALLOWED_ORIGINS.split(',') 
+        : '*',
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization',
       credentials: false,
     });
     
     console.log('Starting server on port:', process.env.PORT ?? 3000);
-    console.log('Environment:', process.env.NODE_ENV);
     console.log('MongoDB URI is set:', !!process.env.MONGODB_URI); // Changed from MONGO_URI to MONGODB_URI
     console.log('Google Maps API Key is set:', !!process.env.GOOGLE_MAPS_API_KEY);
     
