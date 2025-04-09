@@ -7,10 +7,12 @@ async function bootstrap() {
     
     // Enable CORS with more specific configuration for production
     app.enableCors({
-      origin: ['https://parkalot-frontend.vercel.app', 'http://localhost:3000'],
+      origin: process.env.ALLOWED_ORIGINS 
+        ? process.env.ALLOWED_ORIGINS.split(',') 
+        : ['https://parkalot-frontend.vercel.app', 'http://localhost:3000'],
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowedHeaders: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization',
-      credentials: true,
+      allowedHeaders: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization, Origin',
+      credentials: false,
     });
     
     console.log('Starting server on port:', process.env.PORT ?? 3000);

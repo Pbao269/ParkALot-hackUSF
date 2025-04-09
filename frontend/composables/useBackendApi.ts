@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import { useRuntimeConfig } from 'nuxt/app'
 import type { PlacePrediction } from './useGooglePlaces'
 
+
 // Interface for parking lot data from backend
 export interface BackendParkingLot {
   ParkingID: string;
@@ -314,4 +315,5 @@ export function useBackendApi() {
     hasError,
     errorMessage
   }
-} 
+}
+
