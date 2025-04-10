@@ -34,46 +34,37 @@ export class AppController {
     }));
   }
 
-  @Get('/availableParking')
-  async get_avail(
+  @Get('availableParking')
+  async getAvailableParking(
     @Query('destination') destination: string,
-    @Query('permit') permit: string
+    @Query('permit') permit?: string,
   ) {
+    console.log(`Getting available parking for destination: ${destination}, permit: ${permit}`);
+    
     try {
-      // Get distances from DistanceService
-      const distances = await this.distanceService.get_distances(destination, permit);
-
-      // Get parking lots from DatabaseService
-      const parkingLots = await this.databaseService.get_parkings(distances);
-
-      // Check if parking lots data is in the correct format
-      if (!Array.isArray(parkingLots)) {
-        return {
-          statusCode: 500,
-          message: 'Parking lots data is not in the correct format',
-        };
+      // Get distances from the distance service
+      const distances = await this.distanceService.get_distances(destination, permit || '');
+      
+      if (!distances || distances.length === 0) {
+        console.log('No distances returned from distance service');
+        return [];
       }
-
-      // Merge distances and parking lots
-      const merged = distances.map(d => {
-        const lot = parkingLots.find(p => p.ParkingID === d.parkingLotId);
-        return {
-          ParkingID: d.parkingLotId,
-          Available: lot?.Available ?? 0,
-          Distance: d.distance,
-        };
-      });
-
-      // Return the merged result
-      return merged;
-
+      
+      console.log(`Got ${distances.length} distances from distance service`);
+      
+      // Use the database service to get parking lots with these distances
+      const parkingLots = await this.databaseService.get_parkings(distances);
+      
+      if (!parkingLots || parkingLots.length === 0) {
+        console.log('No parking lots returned from database service');
+        return [];
+      }
+      
+      console.log(`Returning ${parkingLots.length} parking lots with distances`);
+      return parkingLots;
     } catch (error) {
-      // Handle any errors that occur during the process
-      console.error('Error fetching parking availability:', error);
-      return {
-        statusCode: 500,
-        message: 'Something went wrong while fetching parking availability',
-      };
+      console.error('Error getting available parking:', error);
+      return [];
     }
   }
 

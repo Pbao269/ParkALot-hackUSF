@@ -141,7 +141,8 @@ export class DatabaseService {
     }
   }
   
-  // Add a method to initialize the database with sample data if needed
+  // Add or update the initializeDatabase method in your database.service.ts
+  
   async initializeDatabase() {
     let client: MongoClient | null = null;
     try {
@@ -164,11 +165,25 @@ export class DatabaseService {
         
         // Load sample data from file
         try {
-          const sampleDataPath = path.join(process.cwd(), 'assets', 'parking-data.json');
+          // Try to load from both possible locations
+          let sampleDataPath = path.join(process.cwd(), 'src', 'park_data.json');
+          if (!fs.existsSync(sampleDataPath)) {
+            sampleDataPath = path.join(process.cwd(), 'assets', 'parking-data.json');
+          }
+          
           if (fs.existsSync(sampleDataPath)) {
             const sampleData = JSON.parse(fs.readFileSync(sampleDataPath, 'utf8'));
             if (Array.isArray(sampleData) && sampleData.length > 0) {
-              const result = await collection.insertMany(sampleData);
+              // Add Available field if it doesn't exist
+              const enhancedData = sampleData.map(item => ({
+                ...item,
+                Available: item.Available || item.TotalSpaces || 0,
+                // Convert TotalSpaces to number if it's a string
+                TotalSpaces: typeof item.TotalSpaces === 'string' ? 
+                  parseInt(item.TotalSpaces, 10) : item.TotalSpaces
+              }));
+              
+              const result = await collection.insertMany(enhancedData);
               this.logger.log(`Inserted ${result.insertedCount} sample parking lots`);
             }
           } else {
