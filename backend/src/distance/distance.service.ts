@@ -93,16 +93,19 @@ export class DistanceService {
   //           "value": 422
   //       }
   //   }]
-  parseJSON(path: string) {
+  parseJSON(filePath: string) {
     try {
-      const data = fs.readFileSync(path, 'utf8'); // ✅ fs used correctly here
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      // Use path.resolve to handle different environments
+      const resolvedPath = path.resolve(process.cwd(), filePath);
+      console.log(`Attempting to read file from: ${resolvedPath}`);
+      const data = fs.readFileSync(resolvedPath, 'utf8');
       return JSON.parse(data);
     } catch (error) {
-      console.error('Error reading or parsing park_data.json:', error);
+      console.error(`Error reading or parsing ${filePath}:`, error);
       return []; // Fallback to empty array
     }
   }
+  
   async get_distances(@Query('destination') destination: string,
                       @Query('permit') permit: string) {
     const apiKey = this.configService.get<string>('GOOGLE_MAPS_API_KEY')
@@ -112,7 +115,17 @@ export class DistanceService {
     }
 
     const url = 'https://maps.googleapis.com/maps/api/distancematrix/json'
-    const parsedData = this.parseJSON('src/park_data.json')
+    // Try multiple possible paths for the JSON file
+    let parsedData = this.parseJSON('src/park_data.json')
+    if (!parsedData || parsedData.length === 0) {
+      console.log('Trying alternative path for park_data.json...');
+      parsedData = this.parseJSON('dist/park_data.json');
+    }
+    if (!parsedData || parsedData.length === 0) {
+      console.log('Trying root path for park_data.json...');
+      parsedData = this.parseJSON('park_data.json');
+    }
+    
     const distances: any[] = []
 
     for (const parking of parsedData) {

@@ -17,8 +17,11 @@ export default defineNuxtConfig({
 
   // Add runtime config for API keys
   runtimeConfig: {
+    // Private keys
+    // Public keys that are exposed to the client
     public: {
-      backendUrl: process.env.NUXT_PUBLIC_BACKEND_URL || 'http://localhost:3000'
+      googleMapsApiKey: process.env.NUXT_PUBLIC_GOOGLE_MAPS_API_KEY,
+      backendUrl: process.env.NUXT_PUBLIC_BACKEND_URL || 'https://parkalot-backend.vercel.app',
     }
   },
 
