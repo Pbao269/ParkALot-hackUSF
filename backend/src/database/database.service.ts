@@ -26,6 +26,7 @@ export class DatabaseService {
     }
   }
 
+  // In the connection method
   async connection() {
     // Return cached client if it exists and is connected
     if (this.cachedClient) {
@@ -63,8 +64,21 @@ export class DatabaseService {
       await client.connect();
       this.logger.log(`🔌 MongoDB connection established to database: ${this.dbName}`);
       const db = client.db(this.dbName);
+      
+      // Add more detailed logging
+      this.logger.log(`MongoDB connection string: ${uri.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@')}`); // Hide credentials
+      
       await db.command({ ping: 1 });
       this.logger.log(`✅ MongoDB connection verified for database: ${this.dbName}`);
+      
+      // Check if collection exists and has documents
+      const collectionExists = await db.listCollections({ name: this.collectionName }).hasNext();
+      this.logger.log(`Collection ${this.collectionName} exists: ${collectionExists}`);
+      
+      if (collectionExists) {
+        const count = await db.collection(this.collectionName).countDocuments();
+        this.logger.log(`Collection ${this.collectionName} has ${count} documents`);
+      }
       
       // Cache the client for future use
       this.cachedClient = client;

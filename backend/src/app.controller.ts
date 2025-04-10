@@ -35,6 +35,7 @@ export class AppController {
   }
 
   @Get('availableParking')
+  // In the getAvailableParking method
   async getAvailableParking(
     @Query('destination') destination: string,
     @Query('permit') permit?: string,
@@ -43,6 +44,7 @@ export class AppController {
     
     try {
       // Get distances from the distance service
+      console.log('Calling distance service...');
       const distances = await this.distanceService.get_distances(destination, permit || '');
       
       if (!distances || distances.length === 0) {
@@ -50,9 +52,10 @@ export class AppController {
         return [];
       }
       
-      console.log(`Got ${distances.length} distances from distance service`);
+      console.log(`Got ${distances.length} distances from distance service:`, JSON.stringify(distances.slice(0, 2)));
       
       // Use the database service to get parking lots with these distances
+      console.log('Calling database service...');
       const parkingLots = await this.databaseService.get_parkings(distances);
       
       if (!parkingLots || parkingLots.length === 0) {
@@ -61,6 +64,9 @@ export class AppController {
       }
       
       console.log(`Returning ${parkingLots.length} parking lots with distances`);
+      // Log a sample of the data being returned
+      console.log('Sample data:', JSON.stringify(parkingLots.slice(0, 1)));
+      
       return parkingLots;
     } catch (error) {
       console.error('Error getting available parking:', error);

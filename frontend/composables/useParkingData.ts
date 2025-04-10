@@ -300,61 +300,71 @@ export function useParkingData() {
       
       if (location) {
         // Use the backend API to get parking data with distances
-        const backendParkingData = await backendApi.getAvailableParking(location, vehicleType);
-        
-        if (backendParkingData && backendParkingData.length > 0) {
-          console.log('Received parking data from backend:', backendParkingData);
+        try {
+          // Use the backend API to get parking data with distances
+          console.log('Requesting data from backend for location:', location);
+          const backendParkingData = await backendApi.getAvailableParking(location, vehicleType);
           
-          // Convert backend data format to our app's format
-          parkingLots = backendParkingData.map(lot => {
-            // Get coordinates from local data (this would ideally come from backend)
-            const localLotData = parkingDataJson.find((item: any) => 
-              item.ParkingID === lot.ParkingID
-            );
-            
-            // Extract coordinates from the address string in local data
-            const coordParts = localLotData?.Address?.split(',').map(part => parseFloat(part.trim())) || [0, 0];
-            const lat = coordParts[0] || 0;
-            const lng = coordParts[1] || 0;
-            
-            // Select a random image from a pool of parking images
-            const imagePool = [
-              'https://images.unsplash.com/photo-1470224114660-3f6686c562eb',
-              'https://images.unsplash.com/photo-1573348722427-f1d6819fdf98',
-              'https://images.unsplash.com/photo-1621977717126-e29964a582e9',
-              'https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8',
-              'https://images.unsplash.com/photo-1590674668150-c379be7ad7bf'
-            ];
-            const randomImageUrl = imagePool[Math.floor(Math.random() * imagePool.length)];
-            
-            // Convert distance from meters to kilometers and miles
-            const distanceInKm = lot.Distance.value / 1000;
-            const distanceInMiles = distanceInKm / 1.60934;
-            
-            // Create the parking lot object in our app's format
-            return {
-              id: lot.ParkingID,
-              name: `Parking ${lot.ParkingID}`,
-              permitTypes: localLotData?.PermitTypes?.split(',').map((type: string) => type.trim()) || [],
-              location: localLotData?.Location || '',
-              totalSpaces: localLotData?.TotalSpaces || 0,
-              availableSpots: lot.Available,
-              address: localLotData?.Address ? `USF Campus, Tampa, FL ${localLotData.ZipCode}` : '',
-              coordinates: { lat, lng },
-              zipCode: localLotData?.ZipCode || '',
-              imageUrl: randomImageUrl,
-              distanceInKm: parseFloat(distanceInKm.toFixed(1)),
-              distanceInMiles: parseFloat(distanceInMiles.toFixed(1)),
-              routeDistance: lot.Distance.text,
-              routeDuration: null, // Backend doesn't provide duration yet
-              travelMode: selectedTravelMode.value,
-              floors: localLotData?.Floors || 0
-            };
-          });
+          console.log('Backend response:', backendParkingData);
           
-          // Sort by distance
-          parkingLots.sort((a, b) => a.distanceInKm - b.distanceInKm);
-        } else {
+          if (backendParkingData && backendParkingData.length > 0) {
+            console.log('Received parking data from backend:', backendParkingData);
+            // Convert backend data format to our app's format
+            parkingLots = backendParkingData.map(lot => {
+              // Get coordinates from local data (this would ideally come from backend)
+              const localLotData = parkingDataJson.find((item: any) => 
+                item.ParkingID === lot.ParkingID
+              );
+              
+              // Extract coordinates from the address string in local data
+              const coordParts = localLotData?.Address?.split(',').map(part => parseFloat(part.trim())) || [0, 0];
+              const lat = coordParts[0] || 0;
+              const lng = coordParts[1] || 0;
+              
+              // Select a random image from a pool of parking images
+              const imagePool = [
+                'https://images.unsplash.com/photo-1470224114660-3f6686c562eb',
+                'https://images.unsplash.com/photo-1573348722427-f1d6819fdf98',
+                'https://images.unsplash.com/photo-1621977717126-e29964a582e9',
+                'https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8',
+                'https://images.unsplash.com/photo-1590674668150-c379be7ad7bf'
+              ];
+              const randomImageUrl = imagePool[Math.floor(Math.random() * imagePool.length)];
+              
+              // Convert distance from meters to kilometers and miles
+              const distanceInKm = lot.Distance.value / 1000;
+              const distanceInMiles = distanceInKm / 1.60934;
+              
+              // Create the parking lot object in our app's format
+              return {
+                id: lot.ParkingID,
+                name: `Parking ${lot.ParkingID}`,
+                permitTypes: localLotData?.PermitTypes?.split(',').map((type: string) => type.trim()) || [],
+                location: localLotData?.Location || '',
+                totalSpaces: localLotData?.TotalSpaces || 0,
+                availableSpots: lot.Available,
+                address: localLotData?.Address ? `USF Campus, Tampa, FL ${localLotData.ZipCode}` : '',
+                coordinates: { lat, lng },
+                zipCode: localLotData?.ZipCode || '',
+                imageUrl: randomImageUrl,
+                distanceInKm: parseFloat(distanceInKm.toFixed(1)),
+                distanceInMiles: parseFloat(distanceInMiles.toFixed(1)),
+                routeDistance: lot.Distance.text,
+                routeDuration: null, // Backend doesn't provide duration yet
+                travelMode: selectedTravelMode.value,
+                floors: localLotData?.Floors || 0
+              };
+            });
+            
+            // Sort by distance
+            parkingLots.sort((a, b) => a.distanceInKm - b.distanceInKm);
+          } else {
+            // Fallback to local data if backend returns no results
+            console.warn('No data from backend API, falling back to local JSON');
+            const rawParkingData = parkingDataJson as unknown as RawParkingData[];
+            parkingLots = await transformParkingData(rawParkingData, userCoordinates.value);
+          }
+        } catch (error) {
           // Fallback to local data if backend returns no results
           console.warn('No data from backend API, falling back to local JSON');
           const rawParkingData = parkingDataJson as unknown as RawParkingData[];
@@ -424,4 +434,4 @@ export function useParkingData() {
     getParkingLots,
     loadParkingOptions
   }
-} 
+}
