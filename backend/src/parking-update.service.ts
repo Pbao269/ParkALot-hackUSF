@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 // src/parking-update.service.ts
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -12,7 +12,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 @Injectable()
-export class ParkingUpdateService {
+export class ParkingUpdateService implements OnModuleInit {
   private readonly logger = new Logger(ParkingUpdateService.name);
   private readonly useTestImages = process.env.USE_TEST_IMAGES === 'true';
   private readonly testImagesDir = path.join(process.cwd(), 'test-images');
@@ -39,6 +39,12 @@ export class ParkingUpdateService {
     }
   }
 
+  // This will run once when the module is initialized
+  async onModuleInit() {
+    this.logger.log('Module initialized - running initial parking update');
+    await this.updateParkingAvailability();
+  }
+
   @Cron('0 */30 * * * *') // Run every 30 minutes
   async updateParkingData() {
     this.logger.log('Updating parking data...');
@@ -54,9 +60,9 @@ export class ParkingUpdateService {
     }
   }
 
-  @Cron('*/2 * * * *')
+  // Removed @Cron decorator to disable scheduled execution
   async updateParkingAvailability() {
-      console.log('\n🔄 === STARTING SCHEDULED PARKING UPDATES ===');
+      console.log('\n🔄 === STARTING PARKING UPDATES ===');
       const lots = await this.parkingLotModel.find().exec();
       console.log(`📊 Found ${lots.length} parking lots in database`);
   
@@ -166,7 +172,7 @@ export class ParkingUpdateService {
           console.error('Full error details:', err);
         }
       }
-      console.log('\n✅ === COMPLETED SCHEDULED PARKING UPDATES ===\n');
+      console.log('\n✅ === COMPLETED PARKING UPDATES ===\n');
   }
 
   private buildFileName(parkingId: string): string {
