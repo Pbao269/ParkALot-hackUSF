@@ -95,11 +95,33 @@ export class DistanceService {
   //   }]
   parseJSON(filePath: string) {
     try {
-      // Use path.resolve to handle different environments
-      const resolvedPath = path.resolve(process.cwd(), filePath);
-      console.log(`Attempting to read file from: ${resolvedPath}`);
-      const data = fs.readFileSync(resolvedPath, 'utf8');
-      return JSON.parse(data);
+      // Try multiple paths to handle different environments including Vercel
+      const possiblePaths = [
+        path.resolve(process.cwd(), filePath),
+        path.resolve(process.cwd(), 'backend', filePath),
+        path.resolve(process.cwd(), 'backend/src', filePath.replace('src/', '')),
+        path.resolve(__dirname, '..', filePath.replace('src/', '')),
+        path.resolve(__dirname, filePath.replace('src/', '')),
+        // Vercel specific paths
+        '/var/task/backend/src/park_data.json',
+        '/var/task/backend/dist/park_data.json'
+      ];
+      
+      console.log(`Attempting to find ${filePath} in multiple locations...`);
+      
+      // Try each path until we find one that works
+      for (const tryPath of possiblePaths) {
+        console.log(`Checking path: ${tryPath}`);
+        if (fs.existsSync(tryPath)) {
+          console.log(`✅ Found file at: ${tryPath}`);
+          const data = fs.readFileSync(tryPath, 'utf8');
+          return JSON.parse(data);
+        }
+      }
+      
+      // If we get here, we couldn't find the file
+      console.error(`❌ Could not find ${filePath} in any of the expected locations`);
+      return [];
     } catch (error) {
       console.error(`Error reading or parsing ${filePath}:`, error);
       return []; // Fallback to empty array

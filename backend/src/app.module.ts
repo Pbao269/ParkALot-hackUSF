@@ -18,9 +18,10 @@ import { InferenceController } from './inference/inference.controller';
   imports: [
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
+      // In the MongooseModule.forRootAsync configuration:
       useFactory: async (configService: ConfigService) => ({
         uri: configService.get<string>('MONGODB_URI'),
-        dbName: 'ParkingDB',  // Explicitly set the database name
+        // Remove the dbName property entirely to use the one from URI
       }),
       inject: [ConfigService],
     }),
